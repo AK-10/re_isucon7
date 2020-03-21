@@ -491,7 +491,9 @@ func postProfile(c echo.Context) error {
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		writeIconFile(avatarName, avatarData)
+		if err := writeIconFile(avatarName, avatarData); err != nil {
+			return err
+		}
 		// _, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
 		// if err != nil {
 		// 	return err
