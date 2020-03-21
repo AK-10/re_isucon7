@@ -48,10 +48,15 @@ func queryMessages(chanID, lastID int64) ([]Message, error) {
 	return msgs, err
 }
 
-func queryMessagesWithJsonify(chanID, lastID int64) ([]map[string]interface{}, error) {
-	response := make([]map[string]interface{}, 0)
+type MsgWithUsr struct {
+	User User
+	Msg  Message
+}
 
-	query := `SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id ASC LIMIT 100`
+func queryMsgWithUsrs(chanID, lastID int64) ([]MsgWithUsr, error) {
+	msgWithUsrs := []MsgWithUsr{}
+
+	query := `SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id DESC LIMIT 100`
 	rows, err := db.Query(query, lastID, chanID)
 
 	if err != nil {
@@ -59,8 +64,6 @@ func queryMessagesWithJsonify(chanID, lastID int64) ([]map[string]interface{}, e
 	}
 
 	for rows.Next() {
-		r := make(map[string]interface{})
-
 		u := User{}
 		m := Message{}
 
@@ -68,15 +71,53 @@ func queryMessagesWithJsonify(chanID, lastID int64) ([]map[string]interface{}, e
 		if err != nil {
 			return nil, err
 		}
-		r["id"] = m.ID
-		r["user"] = u
-		r["date"] = m.CreatedAt.Format("2006/01/02 15:04:05")
-		r["content"] = m.Content
 
-		response = append(response, r)
+		msgWithUsr := MsgWithUsr{User: u, Msg: m}
+
+		msgWithUsrs = append(msgWithUsrs, msgWithUsr)
 	}
 
-	return response, nil
+	return msgWithUsrs, nil
+}
+
+// func queryMessagesWithJsonify(chanID, lastID int64) ([]map[string]interface{}, error) {
+// 	response := make([]map[string]interface{}, 0)
+
+// 	query := `SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id ASC LIMIT 100`
+// 	rows, err := db.Query(query, lastID, chanID)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	for rows.Next() {
+// 		r := make(map[string]interface{})
+
+// 		u := User{}
+// 		m := Message{}
+
+// 		rows.Scan(&u.Name, &u.DisplayName, &u.AvatarIcon, &m.ID, &m.CreatedAt, &m.Content)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		r["id"] = m.ID
+// 		r["user"] = u
+// 		r["date"] = m.CreatedAt.Format("2006/01/02 15:04:05")
+// 		r["content"] = m.Content
+
+// 		response = append(response, r)
+// 	}
+
+// 	return response, nil
+// }
+
+func pureJsonifyMessage(mwu MsgWithUsr) map[string]interface{} {
+	r := make(map[string]interface{})
+	r["id"] = mwu.Msg.ID
+	r["user"] = mwu.User
+	r["date"] = mwu.Msg.CreatedAt.Format("2006/01/02 15:04:05")
+	r["content"] = mwu.Msg.Content
+	return r
 }
 
 func jsonifyMessage(m Message) (map[string]interface{}, error) {
@@ -111,38 +152,28 @@ func getMessage(c echo.Context) error {
 		return err
 	}
 
-	response, err := queryMessagesWithJsonify(chanID, lastID)
+	msgWithUsrs, err := queryMsgWithUsrs(chanID, lastID)
 	if err != nil {
 		return err
 	}
 
-	messages, err := queryMessages(chanID, lastID)
-	if err != nil {
-		return err
+	response := make([]map[string]interface{}, 0)
+	for i := len(msgWithUsrs) - 1; i >= 0; i-- {
+		mwu := msgWithUsrs[i]
+		r := pureJsonifyMessage(mwu)
+		response = append(response, r)
 	}
 
 	// messages はid降順
-	if len(messages) > 0 {
+	if len(msgWithUsrs) > 0 {
 		_, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
 			" VALUES (?, ?, ?, NOW(), NOW())"+
 			" ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-			userID, chanID, messages[0].ID, messages[0].ID)
+			userID, chanID, msgWithUsrs[0].Msg.ID, msgWithUsrs[0].Msg.ID)
 		if err != nil {
 			return err
 		}
 	}
-
-	// responseはm.id昇順
-	// resLen := len(response)
-	// if resLen > 0 {
-	// 	_, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
-	// 		" VALUES (?, ?, ?, NOW(), NOW())"+
-	// 		" ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-	// 		userID, chanID, response[resLen-1]["id"], response[resLen-1]["id"])
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return c.JSON(http.StatusOK, response)
 }
