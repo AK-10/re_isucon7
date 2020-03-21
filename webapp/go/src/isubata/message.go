@@ -115,28 +115,34 @@ func getMessage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	// messages はid降順
-	// if len(messages) > 0 {
-	// 	_, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
-	// 		" VALUES (?, ?, ?, NOW(), NOW())"+
-	// 		" ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-	// 		userID, chanID, messages[0].ID, messages[0].ID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
-	// responseはm.id昇順
-	resLen := len(response)
-	if resLen > 0 {
+	messages, err := queryMessages(chanID, lastID)
+	if err != nil {
+		return err
+	}
+
+	// messages はid降順
+	if len(messages) > 0 {
 		_, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
 			" VALUES (?, ?, ?, NOW(), NOW())"+
 			" ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-			userID, chanID, response[resLen-1]["id"], response[resLen-1]["id"])
+			userID, chanID, messages[0].ID, messages[0].ID)
 		if err != nil {
 			return err
 		}
 	}
+
+	// responseはm.id昇順
+	// resLen := len(response)
+	// if resLen > 0 {
+	// 	_, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
+	// 		" VALUES (?, ?, ?, NOW(), NOW())"+
+	// 		" ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
+	// 		userID, chanID, response[resLen-1]["id"], response[resLen-1]["id"])
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return c.JSON(http.StatusOK, response)
 }
