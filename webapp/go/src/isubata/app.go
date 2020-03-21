@@ -183,6 +183,7 @@ func getInitialize(c echo.Context) error {
 	db.MustExec("DELETE FROM channel WHERE id > 10")
 	db.MustExec("DELETE FROM message WHERE id > 10000")
 	db.MustExec("DELETE FROM haveread")
+	writeInitialIconFile()
 	return c.String(204, "")
 }
 
@@ -490,14 +491,15 @@ func postProfile(c echo.Context) error {
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
-		if err != nil {
-			return err
-		}
-		_, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
-		if err != nil {
-			return err
-		}
+		writeIconFile(avatarName, avatarData)
+		// _, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
+		// if err != nil {
+		// 	return err
+		// }
+		// _, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
@@ -510,7 +512,38 @@ func postProfile(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
+func writeIconFile(name string, data []byte) error {
+	destPath := "/home/isucon/isubata/webapp/public/icons/"
+
+	return ioutil.WriteFile(destPath+name, data, 0644)
+}
+
+func writeInitialIconFile() error {
+	rows, err := db.Query("SELECT name, data FROM image")
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		var fileName string
+		var data []byte
+
+		err := rows.Scan(&fileName, &data)
+		if err != nil {
+			return err
+		}
+
+		if err := writeIconFile(fileName, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// fileに書き込み, nginxで配信する
 func getIcon(c echo.Context) error {
+
 	var name string
 	var data []byte
 	err := db.QueryRow("SELECT name, data FROM image WHERE name = ?",
