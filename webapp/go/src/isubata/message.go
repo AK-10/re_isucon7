@@ -80,37 +80,6 @@ func queryMsgWithUsrs(chanID, lastID int64) ([]MsgWithUsr, error) {
 	return msgWithUsrs, nil
 }
 
-// func queryMessagesWithJsonify(chanID, lastID int64) ([]map[string]interface{}, error) {
-// 	response := make([]map[string]interface{}, 0)
-
-// 	query := `SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id ASC LIMIT 100`
-// 	rows, err := db.Query(query, lastID, chanID)
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	for rows.Next() {
-// 		r := make(map[string]interface{})
-
-// 		u := User{}
-// 		m := Message{}
-
-// 		rows.Scan(&u.Name, &u.DisplayName, &u.AvatarIcon, &m.ID, &m.CreatedAt, &m.Content)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		r["id"] = m.ID
-// 		r["user"] = u
-// 		r["date"] = m.CreatedAt.Format("2006/01/02 15:04:05")
-// 		r["content"] = m.Content
-
-// 		response = append(response, r)
-// 	}
-
-// 	return response, nil
-// }
-
 func pureJsonifyMessage(mwu MsgWithUsr) map[string]interface{} {
 	r := make(map[string]interface{})
 	r["id"] = mwu.Msg.ID
