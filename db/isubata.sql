@@ -38,5 +38,4 @@ CREATE TABLE haveread (
   updated_at DATETIME NOT NULL,
   created_at DATETIME NOT NULL,
   PRIMARY KEY(user_id, channel_id),
-  KEY haveread_index_user_id_channel_id (user_id, channel_id)
 ) Engine=InnoDB DEFAULT CHARSET=utf8mb4;
