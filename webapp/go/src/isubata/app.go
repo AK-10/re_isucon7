@@ -20,7 +20,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	"github.com/patrickmn/go-cache"
 )
 
 const (
@@ -30,7 +29,6 @@ const (
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
-	globalCache   = cache.New(5*time.Minute, 10*time.Minute)
 )
 
 type Renderer struct {
