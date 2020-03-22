@@ -33,4 +33,4 @@ cd "$HERE"/bench
 
 # back project root
 cd "$HERE"
-
+git co master
