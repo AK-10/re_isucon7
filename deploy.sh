@@ -18,12 +18,13 @@ echo "-------- compile source ---------"
 cd webapp/go
 make
 
-
 # restart services
 echo "-------- restart services ---------"
 sudo systemctl restart nginx.service
 sudo systemctl restart isubata.golang
 
+# sleep 2
+echo "-------- 2sec sleeping ---------"
 
 # run benchmark
 echo "-------- run benchmark ---------"
