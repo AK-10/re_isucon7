@@ -80,6 +80,33 @@ func queryMsgWithUsrs(chanID, lastID int64) ([]MsgWithUsr, error) {
 	return msgWithUsrs, nil
 }
 
+// 	"SELECT * FROM message WHERE channel_id = ? ORDER BY id DESC LIMIT ? OFFSET ?",
+// 	chID, N, (page-1)*N)
+func queryMsgWithUsrsOffset(chanID, limit, offset int64) ([]MsgWithUsr, error) {
+	rows, err := db.Query(
+		"SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.channel_id = ? ORDER BY m.id DESC LIMIT ? OFFSET ?",
+		chanID, limit, offset)
+
+	if err != nil {
+		return nil, err
+	}
+
+	mwus := []MsgWithUsr{}
+
+	for rows.Next() {
+		u := User{}
+		m := Message{}
+
+		err := rows.Scan(&u.Name, &u.DisplayName, &u.AvatarIcon, &m.ID, &m.CreatedAt, &m.Content)
+		if err != nil {
+			return nil, err
+		}
+		mwus = append(mwus, MsgWithUsr{Msg: m, User: u})
+	}
+
+	return mwus, nil
+}
+
 func pureJsonifyMessage(mwu MsgWithUsr) map[string]interface{} {
 	r := make(map[string]interface{})
 	r["id"] = mwu.Msg.ID
