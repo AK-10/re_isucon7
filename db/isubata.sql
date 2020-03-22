@@ -27,7 +27,8 @@ CREATE TABLE message (
   channel_id BIGINT,
   user_id BIGINT,
   content TEXT,
-  created_at DATETIME NOT NULL
+  created_at DATETIME NOT NULL,
+  KEY message_idx_channel_id_id (channel_id, id)
 ) Engine=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE haveread (
@@ -36,5 +37,6 @@ CREATE TABLE haveread (
   message_id BIGINT,
   updated_at DATETIME NOT NULL,
   created_at DATETIME NOT NULL,
-  PRIMARY KEY(user_id, channel_id)
+  PRIMARY KEY(user_id, channel_id),
+  KEY haveread_index_user_id_channel_id (user_id, channel_id)
 ) Engine=InnoDB DEFAULT CHARSET=utf8mb4;
