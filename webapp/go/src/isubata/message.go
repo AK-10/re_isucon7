@@ -57,7 +57,7 @@ func queryMsgWithUsrs(chanID, lastID int64) ([]MsgWithUsr, error) {
 	msgWithUsrs := []MsgWithUsr{}
 
 	query := `SELECT u.name, u.display_name, u.avatar_icon, m.id, m.created_at, m.content FROM user u INNER JOIN message m ON u.id = m.user_id WHERE m.channel_id = ? AND m.id > ? ORDER BY m.id DESC LIMIT 100`
-	rows, err := db.Query(query, lastID, chanID)
+	rows, err := db.Query(query, chanID, lastID)
 
 	if err != nil {
 		return nil, err
