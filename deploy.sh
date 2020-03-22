@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 # check TARGET_BRANCH existance
-if [ "$TARGET_BRANCH" = "" ]; then
-	echo "you must set TARGET_BRANCH"
-	exit 0
-fi
-
-# checkout branch
-echo "-------- fetch source ---------"
+# if [ "$TARGET_BRANCH" = "" ]; then
+# 	echo "you must set TARGET_BRANCH"
+# 	exit 0
+# fi
+# 
+# # checkout branch
+# echo "-------- fetch source ---------"
 HERE=/home/isucon/isubata
-git fetch origin "$TARGET_BRANCH":"$TARGET_BRANCH"
-git co "$TARGET_BRANCH"
+# git fetch origin "$TARGET_BRANCH":"$TARGET_BRANCH"
+# git co "$TARGET_BRANCH"
 
 
 # compile
@@ -25,6 +25,7 @@ sudo systemctl restart isubata.golang
 
 # sleep 2
 echo "-------- 2sec sleeping ---------"
+sleep 2
 
 # run benchmark
 echo "-------- run benchmark ---------"
