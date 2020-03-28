@@ -14,9 +14,14 @@ HERE=/home/isucon/isubata
 
 
 # compile
-echo "-------- compile source ---------"
+# echo "-------- compile source ---------"
+# cd webapp/go
+# make
+
+# bundle gems
+# echo "-------- bundle gems ---------"
 cd webapp/go
-make
+./setup.sh
 
 # restart services
 echo "-------- restart services ---------"
@@ -34,5 +39,5 @@ cd "$HERE"/bench
 ./bin/bench -remotes=127.0.0.1 -output result.json; cat result.json | jq
 
 # back project root
-cd "$HERE"
-git co master
+# cd "$HERE"
+# git co master
