@@ -150,6 +150,8 @@ class App < Sinatra::Base
       # statement = db.prepare('SELECT name, display_name, avatar_icon FROM user WHERE id = ?')
       # r['user'] = statement.execute(row['user_id']).first
       # statement.close
+      puts r
+
       response << r
     end
     response.reverse!
