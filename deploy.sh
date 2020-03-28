@@ -19,8 +19,8 @@ HERE=/home/isucon/isubata
 # make
 
 # bundle gems
-# echo "-------- bundle gems ---------"
-cd webapp/go
+echo "-------- bundle gems ---------"
+cd webapp/ruby
 ./setup.sh
 
 # restart services
