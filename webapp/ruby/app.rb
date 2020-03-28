@@ -118,22 +118,44 @@ class App < Sinatra::Base
 
     channel_id = params[:channel_id].to_i
     last_message_id = params[:last_message_id].to_i
-    statement = db.prepare('SELECT * FROM message WHERE id > ? AND channel_id = ? ORDER BY id DESC LIMIT 100')
+    # statement = db.prepare('SELECT * FROM message WHERE id > ? AND channel_id = ? ORDER BY id DESC LIMIT 100')
+    statement = db.prepare([
+      'SELECT m.id AS m_id, m.created_at AS m_created_at, m.content AS m_content, ',
+      'u.id AS u_id, u.name AS u_name, u.salt AS u_salt, u.password AS u_pass, u.display_name AS u_disp_name, ',
+      'u.avatar_icon AS u_avatar_icon, u.created_at AS u_created_at ',
+      'FROM message AS m ',
+      'INNER JOIN user AS u ON m.user_id = u.id ',
+      'WHERE m.channel_id = ? AND m.id > ? ORDER BY m.id DESC LIMIT 100'
+    ].join)
+
+    # rows = statement.execute(channel_id, last_message_id).to_a
+
     rows = statement.execute(last_message_id, channel_id).to_a
     response = []
     rows.each do |row|
       r = {}
-      r['id'] = row['id']
-      statement = db.prepare('SELECT name, display_name, avatar_icon FROM user WHERE id = ?')
-      r['user'] = statement.execute(row['user_id']).first
-      r['date'] = row['created_at'].strftime("%Y/%m/%d %H:%M:%S")
-      r['content'] = row['content']
+      r['id'] = row['m_id']
+      r['date'] = row['m_created_at'].strftime("%Y/%m/%d %H:%M:%S")
+      r['content'] = row['m_content']
+
+      u = {}
+      u['id'] = row['u_id']
+      u['salt'] = row['u_salt']
+      u['password'] = row['u_pass']
+      u['display_name'] = row['u_disp_name']
+      u['avatar_icon'] = row['u_avatar_icon']
+      u['created_at'] = row['u_created_at']
+
+      r['user'] = u
+      # statement = db.prepare('SELECT name, display_name, avatar_icon FROM user WHERE id = ?')
+      # r['user'] = statement.execute(row['user_id']).first
+      # statement.close
       response << r
-      statement.close
     end
     response.reverse!
 
-    max_message_id = rows.empty? ? 0 : rows.map { |row| row['id'] }.max
+    # max_message_id = rows.empty? ? 0 : rows.map { |row| row['id'] }.max
+    max_message_id = rows.empty? ? 0 : rows.first['id']
     statement = db.prepare([
       'INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at) ',
       'VALUES (?, ?, ?, NOW(), NOW()) ',
@@ -241,7 +263,7 @@ class App < Sinatra::Base
     @self_profile = user['id'] == @user['id']
     erb :profile
   end
-  
+
   get '/add_channel' do
     if user.nil?
       return redirect '/login', 303
@@ -342,7 +364,7 @@ class App < Sinatra::Base
     @db_client = Mysql2::Client.new(
       host: ENV.fetch('ISUBATA_DB_HOST') { 'localhost' },
       port: ENV.fetch('ISUBATA_DB_PORT') { '3306' },
-      username: ENV.fetch('ISUBATA_DB_USER') { 'root' },
+      username: ENV.fetch('ISUBATA_DB_USER') { 'isucon' },
       password: ENV.fetch('ISUBATA_DB_PASSWORD') { '' },
       database: 'isubata',
       encoding: 'utf8mb4'

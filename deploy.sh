@@ -21,7 +21,8 @@ make
 # restart services
 echo "-------- restart services ---------"
 sudo systemctl restart nginx.service
-sudo systemctl restart isubata.golang
+sudo systemctl restart isubata.ruby
+# sudo systemctl restart isubata.golang
 
 # sleep 2
 echo "-------- 2sec sleeping ---------"
