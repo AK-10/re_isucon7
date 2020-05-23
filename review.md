@@ -23,7 +23,7 @@
 - unzip alp_linux_amd64.zip
 - sudo mv alp /usr/local/bin/
 
-- nginx.conf に以下を実行
+- nginx.conf のhttpディレクティブに以下を記述
 
 ```
 log_format ltsv "time:$time_local"
